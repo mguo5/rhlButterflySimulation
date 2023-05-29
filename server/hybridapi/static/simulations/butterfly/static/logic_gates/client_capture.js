@@ -4,10 +4,14 @@
     console.log(myString);
     
     if(myString.includes("Error")){
-        document.getElementById("protocol").innerHTML = myString;
+        if(breadboard.GetErrorChecks()){
+            document.getElementById("protocol").innerHTML = myString;
+        }
     }
     else{
-        document.getElementById("protocol").innerHTML = "Ready";
+        if(breadboard.GetErrorChecks()){
+            document.getElementById("protocol").innerHTML = "Ready";
+        }
         parent.postMessage({
             messageType: "web2sim",
             version: "1.0",

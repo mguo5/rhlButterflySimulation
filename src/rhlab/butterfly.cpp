@@ -335,7 +335,6 @@ int ButterflySimulation::read_logic_gate(string substring){
 }
 
 void ButterflySimulation::update(double delta){
-
     ButterflyRequest request;
     bool requestWasRead = readRequest(request);
     if(requestWasRead) {
@@ -350,7 +349,7 @@ void ButterflySimulation::update(double delta){
     if(my_string_length < 2){
         return;
     }
-
+    this->log() << endl << delta << endl;
     this->log() << endl << "===== GPIO STATES =====" << endl;
     print_gpio_header_states();
     this->log() << endl << "===== BUFFER STATES =====" << endl;

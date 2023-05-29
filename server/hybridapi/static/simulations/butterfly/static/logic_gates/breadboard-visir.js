@@ -107,6 +107,7 @@ RHLab.Widgets.Breadboard = function() {
         this._numberOfSwitches = 0;
         this._imageBase = imageBase || (window.STATIC_ROOT + "resources/img/");
         this._enableNetwork = (enableNetwork === undefined)?true:enableNetwork;
+        this.allowErrorMessage = true;
 
         // Start off will all of the breadboard outputs as a False
         $.each(OUTPUTS_BY_PIN, function (pinNumber, name) {
@@ -602,6 +603,14 @@ RHLab.Widgets.Breadboard = function() {
         component.SetBreadboard(this);
     }
 
+    Breadboard.prototype.SetErrorChecks = function(myBool) {
+        this.allowErrorMessage = myBool;
+    }
+
+    Breadboard.prototype.GetErrorChecks = function() {
+        return this.allowErrorMessage;
+    }
+
     Breadboard.PinFinder = function () {
     }
     // Make sure to use your logic gates with dimensions 50 x 43 pixels
@@ -1005,11 +1014,15 @@ RHLab.Widgets.Breadboard = function() {
         var myString = this.CalculateWiringProtocolMessage();
         // console.log(myString);
         if(myString.includes("Error")){
-            document.getElementById("protocol").innerHTML = myString;
+            if(this.GetErrorChecks()){
+                document.getElementById("protocol").innerHTML = myString;
+            }
+            
         }
         else{
-            document.getElementById("protocol").innerHTML = ERROR_MESSAGES["ready"];
-    
+            if(this.GetErrorChecks()){
+                document.getElementById("protocol").innerHTML = ERROR_MESSAGES["ready"];
+            }
         }
         return myString;
     }
@@ -2193,10 +2206,14 @@ RHLab.Widgets.Breadboard = function() {
                 self._Change();
                 var newStringToSend = self._breadboard.Update();
                 if(newStringToSend.includes("Error")){
-                    document.getElementById("protocol").innerHTML = newStringToSend;
+                    if(self._breadboard.GetErrorChecks()){
+                        document.getElementById("protocol").innerHTML = newStringToSend;
+                    }
                 }
                 else{
-                    document.getElementById("protocol").innerHTML = "Ready";
+                    if(self._breadboard.GetErrorChecks()){
+                        document.getElementById("protocol").innerHTML = "Ready";
+                    }
                     parent.postMessage({
                         messageType: "web2sim",
                         version: "1.0",
