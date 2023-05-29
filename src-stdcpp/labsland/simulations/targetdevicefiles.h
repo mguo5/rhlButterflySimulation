@@ -10,14 +10,24 @@
 
 #include <string>
 #include "labsland/simulations/targetdevice.h"
+#include "../protocols/i2ciowrapperfiles.h"
 
 namespace LabsLand::Utils {
 
     class TargetDeviceFiles: public TargetDevice {
 
         private:
-            const std::string inputFilename;
-            const std::string outputFilename;
+            const std::string inputGpioFilename;
+            const std::string outputGpioFilename;
+
+            const std::string firstInputI2cFilename;
+            const std::string firstOutputI2cFilename;
+            const std::string firstSignalI2cFilename;
+
+            const std::string secondInputI2cFilename;
+            const std::string secondOutputI2cFilename;
+            const std::string secondSignalI2cFilename;
+
             const int numberOfOutputs;
             const int numberOfInputs;
 
@@ -26,20 +36,29 @@ namespace LabsLand::Utils {
 
             std::string getOutputValues();
 
+            LabsLand::Protocols::I2C_IO_WrapperFiles * firstI2cIoWrapper = 0;
+            LabsLand::Protocols::I2C_IO_WrapperFiles * secondI2cIoWrapper = 0;
+
         public:
-            TargetDeviceFiles(std::string outputFilename, std::string inputFilename, int numberOfOutputs, int numberOfInputs);
+            TargetDeviceFiles(
+                    int numberOfOutputs, int numberOfInputs, 
+                    const std::string & outputGpioFilename = "output-gpios.txt", const std::string & inputGpioFilename = "input-gpios.txt", 
+                    const std::string & firstOutputI2cFilename = "output-i2c-1.txt", const std::string & firstInputI2cFilename = "input-i2c-1.txt", const std::string & firstSignalI2cFilename = "signal-i2c-1.txt",
+                    const std::string & secondOutputI2cFilename = "output-i2c-2.txt", const std::string & secondInputI2cFilename = "input-i2c-2.txt", const std::string & secondSignalI2cFilename = "signal-i2c-2.txt"
+            );
+            ~TargetDeviceFiles();
 
             /*
              * Does it support this number of inputs and outputs?
              */
-            virtual bool checkSimulationSupport(int outputGpios, int inputGpios);
+            virtual bool checkSimulationSupport(TargetDeviceConfiguration * configuration);
 
             /*
              * Allocate a set of outputs and inputs, in whichever order the device defines.
              *
              * It returns true/false if possible.
              */
-            virtual bool initializeSimulation(int outputGpios, int inputGpios);
+            virtual bool initializeSimulation(TargetDeviceConfiguration * configuration);
 
             /*
              * Reset to the default state of the target device (e.g., all GPIOs available for regular use)
@@ -68,9 +87,9 @@ namespace LabsLand::Utils {
             /**
              * Same, but using custom names
              */
-            virtual void setGpio(NamedGpio outputPosition, bool value = true);
-            virtual void resetGpio(NamedGpio outputPosition);
-            virtual bool getGpio(NamedGpio inputPosition);
+            virtual void setGpio(LabsLand::Protocols::NamedGpio outputPosition, bool value = true);
+            virtual void resetGpio(LabsLand::Protocols::NamedGpio outputPosition);
+            virtual bool getGpio(LabsLand::Protocols::NamedGpio inputPosition);
     };
 }
 

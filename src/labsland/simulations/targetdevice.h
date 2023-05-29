@@ -12,16 +12,9 @@
 #include <string>
 #include <vector>
 
+#include "labsland/protocols.h"
+
 namespace LabsLand::Utils {
-
-
-    enum NamedGpio {
-        // custom serial
-        customSerialLatch,
-        customSerialDataOut,
-        customSerialPulse,
-        // other custom protocols
-    };
 
     /**
      *
@@ -66,24 +59,40 @@ namespace LabsLand::Utils {
      *
      * Important: simulations will be able to know in advance if a target device works or not.
      */
+    class TargetDeviceConfiguration;
+
     class TargetDevice {
         private:
             std::vector<std::string> inputLabels;
             std::vector<std::string> outputLabels;
+
+        protected:
+            // Note: the destructor of the target device will destroy this
+            TargetDeviceConfiguration * configuration = 0;
         public:
+            virtual ~TargetDevice();
             /*
              * Does it support this number of inputs and outputs?
+             *
+             * Note: it does not store configuration
              */
-            virtual bool checkSimulationSupport(int outputGpios, int inputGpios) = 0;
+            virtual bool checkSimulationSupport(TargetDeviceConfiguration * configuration) = 0;
+            // simplified version
+            virtual bool checkSimulationSupport(int outputGpios, int inputGpios);
+
 
             /*
              * Allocate a set of outputs and inputs, in whichever order the device defines.
              *
+             * Note: it DOES store configuration
+             *
              * It returns true/false if possible.
              */
-            virtual bool initializeSimulation(int outputGpios, int inputGpios) = 0;
+            virtual bool initializeSimulation(TargetDeviceConfiguration * configuration) = 0;
+            // simplified version
+            virtual bool initializeSimulation(int outputGpios, int inputGpios);
 
-           /*
+            /*
              * Allocate a set of outputs and inputs, in whichever order the device defines.
              *
              * It is the same as calling initializeSimulation, but providing strings. Internally
@@ -141,10 +150,50 @@ namespace LabsLand::Utils {
             /**
              * Same, but using custom names
              */
-            virtual void setGpio(NamedGpio outputPosition, bool value = true) = 0;
-            virtual void resetGpio(NamedGpio outputPosition) = 0;
-            virtual bool getGpio(NamedGpio inputPosition) = 0;
+            virtual void setGpio(LabsLand::Protocols::NamedGpio outputPosition, bool value = true) = 0;
+            virtual void resetGpio(LabsLand::Protocols::NamedGpio outputPosition) = 0;
+            virtual bool getGpio(LabsLand::Protocols::NamedGpio inputPosition) = 0;
     };
+
+    class TargetDeviceConfiguration {
+            int outputGpios = 0;
+            int inputGpios = 0;
+            std::vector<std::string> inputLabels;
+            std::vector<std::string> outputLabels;
+
+            // there can be up to 2 I2C slaves. You can initialize one, the other or both.
+            // Note the destructor of this class will delete these objects
+            LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0;
+            LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0;
+
+        public:
+            TargetDeviceConfiguration(int outputGpios = 0, int inputGpios = 0, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0);
+            TargetDeviceConfiguration(std::vector<std::string> outputGpios, std::vector<std::string> inputGpios, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0);
+
+            void setOutputGpios(int outputGpios);
+            void setOutputGpios(std::vector<std::string> outputGpios);
+            int getOutputGpios() const;
+            std::vector<std::string> getOutputLabels() const;
+
+            void setInputGpios(int inputGpios);
+            void setInputGpios(std::vector<std::string> inputGpios);
+            int getInputGpios() const;
+            std::vector<std::string> getInputLabels() const;
+
+            void setFirstI2CSlaveConfig(LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig);
+            void setFirstI2CSlaveConfig(LabsLand::Protocols::i2cSlaveCallback * callback, int address);
+
+            LabsLand::Protocols::I2CSlaveConfiguration * getFirstI2CSlaveConfig() const;
+
+            void setSecondI2CSlaveConfig(LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig);
+
+            void setSecondI2CSlaveConfig(LabsLand::Protocols::i2cSlaveCallback * callback, int address);
+
+            LabsLand::Protocols::I2CSlaveConfiguration * getSecondI2CSlaveConfig() const;
+
+            ~TargetDeviceConfiguration();
+    };
+
 }
 
 #endif

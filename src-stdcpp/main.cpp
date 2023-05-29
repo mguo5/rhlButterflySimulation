@@ -35,7 +35,7 @@ class ConcreteSimulationRunner : public SimulationRunner {
             LabsLand::Utils::TargetDevice * targetDevice = 0;
             SimulationCommunicator<OutputDataType, InputDataType> * communicator;
             if (configuration == "files") {
-                targetDevice = new LabsLand::Utils::TargetDeviceFiles("output-gpios.txt", "input-gpios.txt", 20, 10);
+                targetDevice = new LabsLand::Utils::TargetDeviceFiles(20, 10);
                 communicator = new SimulationCommunicatorFiles<OutputDataType, InputDataType>("output-messages.txt", "input-messages.txt");
             } else {
                 // Add here other implementations

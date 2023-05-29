@@ -13,28 +13,76 @@
 
 using namespace std;
 using namespace LabsLand::Utils;
+using namespace LabsLand::Protocols;
 
-TargetDeviceFiles::TargetDeviceFiles(string outputFilename, string inputFilename, int numberOfOutputs, int numberOfInputs): inputFilename(inputFilename), outputFilename(outputFilename), numberOfOutputs(numberOfOutputs), numberOfInputs(numberOfInputs) {
+TargetDeviceFiles::TargetDeviceFiles(
+        int numberOfOutputs, 
+        int numberOfInputs,
+        const string & outputGpioFilename, 
+        const string & inputGpioFilename, 
+        const string & firstOutputI2cFilename,
+        const string & firstInputI2cFilename,
+        const string & firstSignalI2cFilename,
+        const string & secondOutputI2cFilename,
+        const string & secondInputI2cFilename,
+        const string & secondSignalI2cFilename
+    ): 
+        inputGpioFilename(inputGpioFilename), 
+        outputGpioFilename(outputGpioFilename), 
+        numberOfOutputs(numberOfOutputs), 
+        numberOfInputs(numberOfInputs) ,
+        firstOutputI2cFilename(firstOutputI2cFilename),
+        firstInputI2cFilename(firstInputI2cFilename),
+        firstSignalI2cFilename(firstSignalI2cFilename),
+        secondOutputI2cFilename(secondOutputI2cFilename),
+        secondInputI2cFilename(secondInputI2cFilename),
+        secondSignalI2cFilename(secondSignalI2cFilename)
+{}
 
+TargetDeviceFiles::~TargetDeviceFiles() {
+    if (this->firstI2cIoWrapper != 0)
+        delete this->firstI2cIoWrapper;
+
+    if (this->secondI2cIoWrapper != 0)
+        delete this->secondI2cIoWrapper;
 }
 
-bool TargetDeviceFiles::checkSimulationSupport(int outputGpios, int inputGpios) {
-    return outputGpios <= this->numberOfOutputs && inputGpios <= this->numberOfInputs;
+bool TargetDeviceFiles::checkSimulationSupport(TargetDeviceConfiguration * configuration) {
+    return configuration->getOutputGpios() <= this->numberOfOutputs && configuration->getInputGpios() <= this->numberOfInputs;
 }
 
-bool TargetDeviceFiles::initializeSimulation(int outputGpios, int inputGpios) {
-    if (!checkSimulationSupport(outputGpios, inputGpios))
+bool TargetDeviceFiles::initializeSimulation(TargetDeviceConfiguration * configuration) {
+    if (!checkSimulationSupport(configuration))
         return false;
 
-    this->numberOfSimulationOutputs = outputGpios;
-    this->numberOfSimulationInputs = inputGpios;
+    this->numberOfSimulationOutputs = configuration->getOutputGpios();
+    this->numberOfSimulationInputs = configuration->getInputGpios();
+    this->configuration = configuration;
 
-    // Initialize the file
-    ofstream ofile(this->outputFilename);
+    // Initialize the output GPIO file
+    ofstream ofile(this->outputGpioFilename);
     for (int i = 0; i < this->numberOfSimulationOutputs; ++i)
         ofile << "0";
 
     ofile.close();
+
+    // Initialize I2C (if provided)
+    if (configuration->getFirstI2CSlaveConfig() != 0) {
+        if (this->firstI2cIoWrapper != 0) {
+            delete this->firstI2cIoWrapper;
+        }
+        this->firstI2cIoWrapper = new I2C_IO_WrapperFiles();
+        this->firstI2cIoWrapper->initialize(this->firstOutputI2cFilename, this->firstInputI2cFilename, this->firstSignalI2cFilename, configuration->getFirstI2CSlaveConfig()->getCallback());
+    }
+
+    if (configuration->getSecondI2CSlaveConfig() != 0) {
+        if (this->secondI2cIoWrapper != 0) {
+            delete this->secondI2cIoWrapper;
+        }
+        this->secondI2cIoWrapper = new I2C_IO_WrapperFiles();
+        this->secondI2cIoWrapper->initialize(this->secondOutputI2cFilename, this->secondInputI2cFilename, this->secondSignalI2cFilename, configuration->getSecondI2CSlaveConfig()->getCallback());
+    }
+
     return true;
 }
 
@@ -42,17 +90,12 @@ void TargetDeviceFiles::resetAfterSimulation() {
     this->numberOfSimulationOutputs = 0;
     this->numberOfSimulationInputs = 0;
 
-    ofstream ofile(this->outputFilename);
+    ofstream ofile(this->outputGpioFilename);
     ofile.close();
 }
 
-bool TargetDeviceFiles::initializeCustomSerial() {
-    // TODO
-    return true;
-}
-
 string TargetDeviceFiles::getOutputValues() {
-    ifstream ifile(this->outputFilename);
+    ifstream ifile(this->outputGpioFilename);
     stringstream buffer;
     buffer << ifile.rdbuf();
     string gpios = buffer.str();
@@ -78,7 +121,7 @@ void TargetDeviceFiles::setGpio(int outputPosition, bool value) {
     }
 
     currentOutputs[outputPosition] = value?'1':'0';
-    ofstream ofile(this->outputFilename);
+    ofstream ofile(this->outputGpioFilename);
     ofile << currentOutputs;
     ofile.close();
 }
@@ -88,7 +131,7 @@ void TargetDeviceFiles::resetGpio(int outputPosition) {
 }
 
 bool TargetDeviceFiles::getGpio(int inputPosition) {
-    ifstream ifile(this->inputFilename);
+    ifstream ifile(this->inputGpioFilename);
     stringstream buffer;
     buffer << ifile.rdbuf();
     string gpios = buffer.str();
@@ -97,6 +140,11 @@ bool TargetDeviceFiles::getGpio(int inputPosition) {
         return false;
 
     return gpios[inputPosition] == '1';
+}
+
+bool TargetDeviceFiles::initializeCustomSerial() {
+    // TODO
+    return true;
 }
 
 void TargetDeviceFiles::setGpio(NamedGpio outputPosition, bool value) {

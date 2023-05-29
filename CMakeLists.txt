@@ -9,6 +9,7 @@ add_executable(hybridapi
     src-stdcpp/main.cpp 
     src-stdcpp/labsland/utils/timemanagerstd.cpp
     src-stdcpp/labsland/simulations/targetdevicefiles.cpp
+    src-stdcpp/labsland/protocols/i2ciowrapperfiles.cpp
 
     src/labsland/simulations/targetdevice.cpp
     src/labsland/simulations/watertanksimulation.cpp
