@@ -4,6 +4,7 @@
     console.log(myString);
     
     if(myString.includes("Error")){
+        // check if error messages are allowed
         if(breadboard.GetErrorChecks()){
             document.getElementById("protocol").innerHTML = myString;
         }

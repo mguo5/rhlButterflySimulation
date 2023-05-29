@@ -107,7 +107,7 @@ RHLab.Widgets.Breadboard = function() {
         this._numberOfSwitches = 0;
         this._imageBase = imageBase || (window.STATIC_ROOT + "resources/img/");
         this._enableNetwork = (enableNetwork === undefined)?true:enableNetwork;
-        this.allowErrorMessage = true;
+        this.allowErrorMessage = true;  //boolean to track if error messaging output should be enabled
 
         // Start off will all of the breadboard outputs as a False
         $.each(OUTPUTS_BY_PIN, function (pinNumber, name) {

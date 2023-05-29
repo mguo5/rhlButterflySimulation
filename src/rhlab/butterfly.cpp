@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "butterfly.h"
 
 using namespace std;
