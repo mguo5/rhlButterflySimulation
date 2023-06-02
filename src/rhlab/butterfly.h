@@ -106,4 +106,14 @@ class DE1SoC_ButterflySimulation : public ButterflySimulation {
         };
 };
 
+class TIVA_ButterflySimulation : public ButterflySimulation {
+    public:
+        int getNumberOfSimulationInputs(void) {
+            return 5;
+        }
+        int getNumberOfSimulationOutputs(void) {
+            return 5;
+        }
+};
+
 #endif
